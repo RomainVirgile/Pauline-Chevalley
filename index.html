@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pauline Chevalley — Atelier de sculpture sur bois</title>
+
+<!-- Adobe Fonts: Optima -->
+<link rel="stylesheet" href="https://use.typekit.net/ebb8sim.css">
+
+<style>
+  :root{
+    --olive:        #98a049;
+    --olive-glass:  rgba(152, 160, 73, 0.85);
+    --walnut:       #241b12;
+    --walnut-soft:  #3a2c1c;
+    --cream:        #f6f3ea;
+    --sand:         #cbb389;
+
+    --font-optima: "optima-regular", "Optima", "Futura", "Century Gothic", sans-serif;
+    --font-serif:  Georgia, "Iowan Old Style", serif;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    background:var(--walnut);
+    color:var(--cream);
+    font-family:var(--font-optima);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{ color:inherit; text-decoration:none; }
+
+  /* ============ VIGNETTE / GLASS HEADER ============ */
+
+  header.site-vignette {
+    position: fixed;
+    top: 24px;
+    left: 24px;
+    z-index: 100;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+
+    width: 360px;
+    max-width: calc(100vw - 48px);
+    padding: 28px 32px;
+
+    /* Soft blurred glass background without border */
+    background: var(--olive-glass);
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+    border: none;
+    border-radius: 24px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+
+    transition: padding 0.5s cubic-bezier(0.22, 0.61, 0.36, 1),
+                border-radius 0.5s cubic-bezier(0.22, 0.61, 0.36, 1),
+                width 0.5s cubic-bezier(0.22, 0.61, 0.36, 1),
+                gap 0.5s cubic-bezier(0.22, 0.61, 0.36, 1),
+                opacity 0.35s ease,
+                transform 0.35s ease;
+  }
+
+  /* Compact state padding & shape adjustments */
+  header.site-vignette.is-compact {
+    width: auto;
+    padding: 14px 16px;
+    border-radius: 16px;
+    gap: 0;
+    transform: scale(0.75);
+    transform-origin: top left;
+  }
+
+  /* Logo styling - fixed size */
+  .vignette-logo {
+    display: block;
+    line-height: 1;
+  }
+
+  .vignette-logo img {
+    height: 72px;
+    width: auto;
+    display: block;
+    background: transparent;
+  }
+
+  /* Fallback text if logo image is missing */
+  .vignette-logo .logo-fallback {
+    font-family: var(--font-optima);
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--walnut);
+    white-space: nowrap;
+  }
+
+  /* Information Details Container */
+  .vignette-info {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    color: var(--walnut);
+    font-family: var(--font-optima);
+    font-size: 15px;
+    line-height: 1.35;
+    letter-spacing: 0.02em;
+
+    /* Transitions for collapsible behavior */
+    max-height: 200px;
+    opacity: 1;
+    overflow: hidden;
+    transition: max-height 0.5s cubic-bezier(0.22, 0.61, 0.36, 1),
+                opacity 0.35s ease;
+  }
+
+  .vignette-info span { display: block; }
+
+  /* Collapsed state for text info */
+  header.site-vignette.is-compact .vignette-info {
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ============ GRID TOGGLE BUTTON ============ */
+
+  .grid-toggle {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 100;
+
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--olive-glass);
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+
+    color: var(--walnut);
+    cursor: pointer;
+    transition: transform 0.25s ease, background 0.3s ease;
+  }
+
+  .grid-toggle:hover { transform: translateY(-2px); }
+  .grid-toggle:active { transform: translateY(0); }
+
+  .grid-toggle svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+  }
+
+  .grid-toggle.is-active {
+    background: var(--olive);
+  }
+
+  @media (max-width: 768px) {
+    .grid-toggle {
+      display: none;
+    }
+  }
+
+  /* ============ GALLERY (DESKTOP) ============ */
+
+  main.gallery{
+    position:fixed;
+    inset:0;
+    height:100vh;
+    overflow-y:scroll;
+    scroll-snap-type:y proximity;
+    scrollbar-width:none;
+    z-index:1;
+  }
+  main.gallery::-webkit-scrollbar{ display:none; }
+
+  .slide{
+    position:relative;
+    height:100vh;
+    width:100%;
+    overflow:hidden;
+    scroll-snap-align:start;
+    background:var(--walnut-soft);
+  }
+
+  .slide__parallax{
+    position:absolute;
+    inset:-14% 0;
+    will-change:transform;
+    backface-visibility:hidden;
+  }
+
+  .slide__img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    opacity:0;
+    transform:scale(1.14);
+    transition:opacity 1.5s cubic-bezier(.22,.61,.36,1),
+               transform 2.1s cubic-bezier(.16,.84,.44,1);
+  }
+
+  .slide.is-visible .slide__img{
+    opacity:1;
+    transform:scale(1);
+  }
+
+  .slide__scrim{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height:34%;
+    background:linear-gradient(to top, rgba(20,14,8,.55), rgba(20,14,8,0));
+    opacity:0;
+    transition:opacity 1.4s ease .2s;
+    pointer-events:none;
+  }
+  .slide.is-visible .slide__scrim{ opacity:1; }
+
+  .slide__caption{
+    position:absolute;
+    left:clamp(20px, 4vw, 48px);
+    bottom:clamp(20px, 4vw, 40px);
+    font-family:var(--font-optima);
+    color:var(--cream);
+    opacity:0;
+    transform:translateY(14px);
+    transition:opacity 1s ease .35s, transform 1s cubic-bezier(.16,.84,.44,1) .35s;
+  }
+  .slide.is-visible .slide__caption{ opacity:1; transform:translateY(0); }
+
+  .slide__caption .title{
+    font-family:var(--font-serif);
+    font-style:italic;
+    font-size:clamp(18px, 2vw, 22px);
+    margin-top:4px;
+  }
+
+  /* Placeholder styling */
+  .slide__img.placeholder-active{
+    opacity:1;
+    transform:scale(1);
+    object-fit:none;
+    background:
+      repeating-linear-gradient(115deg, rgba(255,255,255,.05) 0 2px, transparent 2px 26px),
+      linear-gradient(160deg, #4a3a24, #241b12 75%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .placeholder-label{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    font-family:var(--font-optima);
+    color:rgba(246,243,234,.55);
+    text-align:center;
+    letter-spacing:.08em;
+    font-size:13px;
+    pointer-events:none;
+  }
+  .placeholder-label b{
+    font-size:22px;
+    letter-spacing:.02em;
+    color:rgba(246,243,234,.8);
+  }
+
+  /* ============ GRID VIEW MODE (desktop only) ============ */
+  /* Real CSS Grid, not multi-column — this is what makes images read
+     left-to-right, row by row, instead of flowing down one column
+     before moving to the next. Trade-off: each row's height is set
+     by its tallest image, so a shorter image sharing a row with a
+     taller one will show a little of the cream background beneath
+     it (align-items:start keeps that gap clean rather than
+     stretching/cropping the image to fill it). */
+
+  main.gallery.is-grid{
+    position:relative;
+    inset:auto;
+    height:auto;
+    min-height:100vh;
+    overflow:visible;
+    scroll-snap-type:none;
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    align-items:start;
+    gap:3px;
+    padding:0;
+    background:var(--cream);
+  }
+
+  main.gallery.is-grid .slide{
+    height:auto;
+    display:block;
+    border-radius:0;
+    overflow:hidden;
+    scroll-snap-align:none;
+    cursor:pointer;
+    transition:opacity .2s ease;
+  }
+
+  main.gallery.is-grid .slide:hover{
+    opacity:.85;
+  }
+
+  main.gallery.is-grid .slide__parallax{
+    position:static;
+    inset:auto;
+    transform:none !important;
+  }
+
+  main.gallery.is-grid .slide__img{
+    position:static;
+    display:block;
+    width:100%;
+    height:auto;
+    object-fit:initial;
+    transform:none !important;
+  }
+
+  main.gallery.is-grid .slide__scrim,
+  main.gallery.is-grid .slide__caption{
+    display:none;
+  }
+
+  /* Vignette steps aside entirely in grid view — the grid now has
+     the full screen to itself, so there's nothing left to clear. */
+  header.site-vignette.is-hidden{
+    opacity:0;
+    transform:scale(.94);
+    pointer-events:none;
+  }
+
+  @media (max-width:1100px){
+    main.gallery.is-grid{ grid-template-columns:repeat(3, 1fr); }
+  }
+
+  /* ============ MOBILE LAYOUT BREAKPOINT ============ */
+
+  @media (max-width: 768px) {
+    /* Flow natively on mobile, light background instead of dark walnut */
+    body {
+      overflow-y: auto;
+      background: var(--cream);
+    }
+
+    header.site-vignette {
+      position: relative;
+      top: 0;
+      left: 0;
+      margin: 16px 16px 24px 16px;
+      width: calc(100vw - 32px);
+      max-width: none;
+      padding: 20px;
+    }
+
+    header.site-vignette.is-compact {
+      transform: none;
+    }
+
+    .vignette-logo img {
+      height: 56px;
+    }
+
+    .vignette-logo .logo-fallback {
+      font-size: 26px;
+    }
+
+    /* Stack gallery images naturally */
+    main.gallery {
+      position: relative;
+      inset: auto;
+      height: auto;
+      overflow-y: visible;
+      scroll-snap-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding: 0 16px 32px 16px;
+    }
+
+    /* Each image keeps its own natural ratio — no forced crop */
+    .slide {
+      position: relative;
+      height: auto;
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--sand);
+    }
+
+    .slide__parallax {
+      position: static;
+      inset: auto;
+      transform: none !important;
+    }
+
+    .slide__img {
+      position: static;
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: initial;
+      transform: none !important;
+    .slide__img.placeholder-active {
+      height: 220px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-vignette" id="vignette">
+  <div class="vignette-logo">
+    <img
+      src="assets/logo.png"
+      alt="Pauline Chevalley"
+      onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'logo-fallback',textContent:'Pauline Chevalley'}))">
+  </div>
+
+  <div class="vignette-info">
+    <div class="vignette-block">
+      <span>Atelier de sculpture sur bois</span>
+      <span>Yverdon-les-Bains</span>
+    </div>
+    <div class="vignette-block">
+      <span>+41 78 973 00 73</span>
+      <span>paulinechevalley00@gmail.com</span>
+    </div>
+  </div>
+</header>
+
+<button class="grid-toggle" id="gridToggle" type="button" aria-label="Vue en grille" aria-pressed="false">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3" y="3" width="18" height="18" stroke="currentColor" stroke-width="1.6"/>
+    <line x1="12" y1="3" x2="12" y2="21" stroke="currentColor" stroke-width="1.6"/>
+    <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="1.6"/>
+  </svg>
+</button>
+
+<main class="gallery" id="gallery"></main>
+
+<script>
+  const pieces = [
+    { file: "images/Image_1.JPG", title: "" },
+    { file: "images/Image_2.JPG", title: "" },
+    { file: "images/Image_3.JPG", title: "" },
+    { file: "images/Image_4.JPG", title: "" },
+    { file: "images/Image_5.JPG", title: "" },
+    { file: "images/Image_6.JPG", title: "" },
+    { file: "images/Image_7.JPG", title: "" },
+    { file: "images/Image_8.JPG", title: "" },
+    { file: "images/Image_9.JPG", title: "" },
+    { file: "images/Image_10.JPG", title: "" },
+    { file: "images/Image_11.JPG", title: "" },
+    { file: "images/Image_12.JPG", title: "" },
+    { file: "images/Image_13.JPG", title: "" },
+    { file: "images/Image_14.JPG", title: "" },
+    { file: "images/Image_15.JPG", title: "" },
+    { file: "images/Image_16.JPG", title: "" },
+    { file: "images/Image_17.JPG", title: "" },
+    { file: "images/Image_18.JPG", title: "" },
+    { file: "images/Image_19.JPG", title: "" },
+    { file: "images/Image_20.JPG", title: "" },
+    { file: "images/Image_21.JPG", title: "" },
+    { file: "images/Image_22.JPG", title: "" },
+    { file: "images/Image_23.JPG", title: "" },
+    { file: "images/Image_24.JPG", title: "" },
+    { file: "images/Image_25.JPG", title: "" },
+    { file: "images/Image_26.JPG", title: "" },
+    { file: "images/Image_27.JPG", title: "" },
+    { file: "images/Image_28.JPG", title: "" },
+    { file: "images/Image_29.JPG", title: "" },
+    { file: "images/Image_30.JPG", title: "" },
+    { file: "images/Image_31.JPG", title: "" },
+    { file: "images/Image_32.JPG", title: "" },
+    { file: "images/Image_33.JPG", title: "" },
+    { file: "images/Image_34.JPG", title: "" },
+    { file: "images/Image_35.JPG", title: "" },
+    { file: "images/Image_36.JPG", title: "" },
+    { file: "images/Image_37.JPG", title: "" },
+    { file: "images/Image_38.JPG", title: "" },
+    { file: "images/Image_39.JPG", title: "" },
+    { file: "images/Image_40.JPG", title: "" },
+
+  ];
+
+  const gallery = document.getElementById('gallery');
+
+  pieces.forEach((piece, i) => {
+    const n = String(i + 1).padStart(2, '0');
+
+    const slide = document.createElement('div');
+    slide.className = 'slide';
+    slide.dataset.index = i;
+
+    slide.innerHTML = `
+      <div class="slide__parallax">
+        <img class="slide__img" src="${piece.file}" alt="Sculpture ${n}">
+      </div>
+      <div class="slide__scrim"></div>
+      ${piece.title ? `<div class="slide__caption"><div class="title">${piece.title}</div></div>` : ``}
+    `;
+
+    const img = slide.querySelector('.slide__img');
+    img.addEventListener('error', () => {
+      img.classList.add('placeholder-active');
+      const label = document.createElement('div');
+      label.className = 'placeholder-label';
+      label.innerHTML = `<b>${n}</b><span>${piece.file}</span>`;
+      slide.querySelector('.slide__parallax').appendChild(label);
+    }, { once: true });
+
+    gallery.appendChild(slide);
+  });
+
+  const isMobile = () => window.innerWidth <= 768;
+  let isGrid = false;
+
+  /* Reveal-on-scroll for desktop gallery */
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('is-visible');
+    });
+  }, { root: gallery, threshold: 0.35 });
+
+  if (!isMobile()) {
+    slides.forEach(s => io.observe(s));
+  } else {
+    slides.forEach(s => s.classList.add('is-visible'));
+  }
+
+  /* Parallax calculation for desktop — reads are batched before writes
+     to avoid forced layout thrashing on every scroll frame. */
+  function updateParallax(){
+    if (isMobile() || isGrid) return;
+
+    const viewportH = gallery.clientHeight;
+    const galleryTop = gallery.getBoundingClientRect().top;
+
+    // batch reads first
+    const offsets = slides.map(slide => {
+      const rect = slide.getBoundingClientRect();
+      const slideCenter = rect.top + rect.height / 2 - galleryTop;
+      const viewportCenter = viewportH / 2;
+      return (viewportCenter - slideCenter) * 0.14;
+    });
+
+    // then batch writes
+    slides.forEach((slide, i) => {
+      const layer = slide.querySelector('.slide__parallax');
+      if (layer) layer.style.transform = `translate3d(0, ${offsets[i]}px, 0)`;
+    });
+  }
+
+  /* Vignette scroll behaviour */
+  const vignette = document.getElementById('vignette');
+
+  function updateVignette(){
+    const y = (isMobile() || isGrid) ? window.scrollY : gallery.scrollTop;
+    if (y > 30) {
+      vignette.classList.add('is-compact');
+    } else {
+      vignette.classList.remove('is-compact');
+    }
+  }
+
+  /* Parallax runs on a continuous animation loop rather than being
+     gated behind scroll events — this is what makes it feel smooth,
+     since scroll events can arrive in uneven bursts on trackpads. */
+  function parallaxLoop(){
+    updateParallax();
+    requestAnimationFrame(parallaxLoop);
+  }
+  requestAnimationFrame(parallaxLoop);
+
+  /* Vignette compact/expand toggle is a discrete state change, so a
+     lightweight scroll-event listener is fine for it. */
+  let ticking = false;
+  const handleScroll = () => {
+    if (!ticking){
+      requestAnimationFrame(() => {
+        updateVignette();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  };
+
+  gallery.addEventListener('scroll', handleScroll, { passive:true });
+  window.addEventListener('scroll', handleScroll, { passive:true });
+
+  window.addEventListener('resize', () => {
+    updateParallax();
+    updateVignette();
+    // grid view is desktop-only — bail out automatically if the
+    // window is resized down into mobile range while it's active
+    if (isGrid && isMobile()) setGrid(false);
+  });
+
+  /* Grid view toggle — icons match the two reference shapes:
+     a square split into four (grid) and a rectangle split into two
+     rows (standard/full view), plain outline, no rounded corners. */
+  const gridIconSVG = `
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="3" width="18" height="18" stroke="currentColor" stroke-width="1.6"/>
+      <line x1="12" y1="3" x2="12" y2="21" stroke="currentColor" stroke-width="1.6"/>
+      <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="1.6"/>
+    </svg>`;
+
+  const standardIconSVG = `
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="5" width="18" height="14" stroke="currentColor" stroke-width="1.6"/>
+      <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="1.6"/>
+    </svg>`;
+
+  const gridToggle = document.getElementById('gridToggle');
+
+  function setGrid(next, focusSlide){
+    isGrid = next;
+
+    gallery.classList.toggle('is-grid', isGrid);
+    gridToggle.classList.toggle('is-active', isGrid);
+    gridToggle.innerHTML = isGrid ? standardIconSVG : gridIconSVG;
+    gridToggle.setAttribute('aria-label', isGrid ? 'Vue plein écran' : 'Vue en grille');
+    gridToggle.setAttribute('aria-pressed', String(isGrid));
+    vignette.classList.toggle('is-hidden', isGrid);
+
+    if (isGrid){
+      // grid thumbnails should just be visible, no scroll-triggered reveal
+      slides.forEach(s => s.classList.add('is-visible'));
+      // clear any leftover parallax offset so images sit flush in the grid
+      slides.forEach(s => {
+        const layer = s.querySelector('.slide__parallax');
+        if (layer) layer.style.transform = '';
+      });
+    } else if (focusSlide){
+      // reading offsetTop here forces a synchronous layout pass, so it
+      // reflects the just-restored full-bleed positions, not the old grid ones
+      gallery.scrollTop = focusSlide.offsetTop;
+    } else {
+      gallery.scrollTop = 0;
+    }
+  }
+
+  gridToggle.addEventListener('click', () => setGrid(!isGrid));
+
+  // Clicking a picture while in grid view jumps straight to it in full view
+  slides.forEach(slide => {
+    slide.addEventListener('click', () => {
+      if (!isGrid) return;
+      setGrid(false, slide);
+    });
+  });
+</script>
+
+</body>
+</html>
