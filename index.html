@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pauline Chevalley — Atelier de sculpture sur bois</title>
 
+<link rel="preconnect" href="https://use.typekit.net" crossorigin>
+<link rel="preconnect" href="https://p.typekit.net" crossorigin>
+
 <!-- Adobe Fonts: Optima -->
 <link rel="stylesheet" href="https://use.typekit.net/ebb8sim.css">
 
@@ -511,9 +514,18 @@
     slide.className = 'slide';
     slide.dataset.index = i;
 
+    const isFirst = i === 0;
+
     slide.innerHTML = `
       <div class="slide__parallax">
-        <img class="slide__img" src="${piece.file}" alt="Sculpture ${n}">
+        <img
+          class="slide__img"
+          src="${piece.file}"
+          alt="Sculpture ${n}"
+          loading="${isFirst ? 'eager' : 'lazy'}"
+          decoding="async"
+          ${isFirst ? 'fetchpriority="high"' : ''}
+        >
       </div>
       <div class="slide__scrim"></div>
       ${piece.title ? `<div class="slide__caption"><div class="title">${piece.title}</div></div>` : ``}
