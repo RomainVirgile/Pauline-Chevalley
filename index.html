@@ -7,9 +7,16 @@
 
 <link rel="preconnect" href="https://use.typekit.net" crossorigin>
 <link rel="preconnect" href="https://p.typekit.net" crossorigin>
+<link rel="dns-prefetch" href="https://use.typekit.net">
+<link rel="dns-prefetch" href="https://p.typekit.net">
 
-<!-- Adobe Fonts: Optima -->
-<link rel="stylesheet" href="https://use.typekit.net/ebb8sim.css">
+<!-- Adobe Fonts: Optima — loaded non-render-blocking. A normal
+     <link rel="stylesheet"> to a third-party host forces the browser
+     to fetch it before painting any text; this preload+swap pattern
+     lets the page paint immediately in the fallback font stack and
+     swap to Optima the moment it arrives. -->
+<link rel="preload" href="https://use.typekit.net/ebb8sim.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://use.typekit.net/ebb8sim.css"></noscript>
 
 <style>
   :root{
@@ -561,26 +568,33 @@
   }
 
   /* Parallax calculation for desktop — reads are batched before writes
-     to avoid forced layout thrashing on every scroll frame. */
+     to avoid forced layout thrashing, and only slides near the current
+     scroll position are touched each time (not all 40), since the rest
+     are off-screen and don't need a fresh transform. */
+  const parallaxLayers = slides.map(slide => slide.querySelector('.slide__parallax'));
+
   function updateParallax(){
     if (isMobile() || isGrid) return;
 
     const viewportH = gallery.clientHeight;
     const galleryTop = gallery.getBoundingClientRect().top;
+    const currentIndex = Math.round(gallery.scrollTop / viewportH);
+    const lo = Math.max(0, currentIndex - 2);
+    const hi = Math.min(slides.length - 1, currentIndex + 2);
 
     // batch reads first
-    const offsets = slides.map(slide => {
-      const rect = slide.getBoundingClientRect();
+    const offsets = [];
+    for (let i = lo; i <= hi; i++){
+      const rect = slides[i].getBoundingClientRect();
       const slideCenter = rect.top + rect.height / 2 - galleryTop;
-      const viewportCenter = viewportH / 2;
-      return (viewportCenter - slideCenter) * 0.14;
-    });
+      offsets.push((viewportH / 2 - slideCenter) * 0.14);
+    }
 
     // then batch writes
-    slides.forEach((slide, i) => {
-      const layer = slide.querySelector('.slide__parallax');
-      if (layer) layer.style.transform = `translate3d(0, ${offsets[i]}px, 0)`;
-    });
+    for (let i = lo; i <= hi; i++){
+      const layer = parallaxLayers[i];
+      if (layer) layer.style.transform = `translate3d(0, ${offsets[i - lo]}px, 0)`;
+    }
   }
 
   /* Vignette scroll behaviour */
@@ -595,21 +609,17 @@
     }
   }
 
-  /* Parallax runs on a continuous animation loop rather than being
-     gated behind scroll events — this is what makes it feel smooth,
-     since scroll events can arrive in uneven bursts on trackpads. */
-  function parallaxLoop(){
-    updateParallax();
-    requestAnimationFrame(parallaxLoop);
-  }
-  requestAnimationFrame(parallaxLoop);
-
-  /* Vignette compact/expand toggle is a discrete state change, so a
-     lightweight scroll-event listener is fine for it. */
+  /* Both parallax and the vignette toggle are driven by this single
+     rAF-throttled scroll listener — nothing runs while the page is
+     idle, only while an actual scroll is in progress. (Previously
+     parallax ran on its own infinite requestAnimationFrame loop,
+     recalculating all 40 slides' positions 60 times a second even
+     when the page was sitting still — the main runtime cost fixed here.) */
   let ticking = false;
   const handleScroll = () => {
     if (!ticking){
       requestAnimationFrame(() => {
+        updateParallax();
         updateVignette();
         ticking = false;
       });
